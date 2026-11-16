@@ -1,0 +1,11 @@
+node_modules/
+dist/
+target/
+.env
+backend/data/
+frontend/test-results/
+frontend/playwright-report/
+*.log
+.idea/
+.vscode/
+.DS_Store

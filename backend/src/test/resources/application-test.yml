@@ -1,0 +1,16 @@
+spring:
+  datasource:
+    url: ${TEST_DB_URL:jdbc:postgresql://localhost:5432/promora_test}
+    username: ${TEST_DB_USER:promora}
+    password: ${TEST_DB_PASSWORD:promora}
+  flyway:
+    clean-disabled: false
+promora:
+  jwt:
+    secret: test-secret-test-secret-test-secret-test-secret-0123456789
+  hash-salt: test-salt
+  auth:
+    expose-dev-tokens: true
+  ratelimit:
+    enabled: false
+  seed-demo-data: false

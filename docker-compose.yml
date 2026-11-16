@@ -1,0 +1,50 @@
+# One-command local stack:  docker compose up --build
+# Website http://localhost:5173 · API docs http://localhost:8080/swagger-ui.html · Mailpit (dev inbox) http://localhost:8025
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment: { POSTGRES_DB: promora, POSTGRES_USER: promora, POSTGRES_PASSWORD: "${DB_PASSWORD:-promora}" }
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+    healthcheck: { test: ["CMD-SHELL", "pg_isready -U promora"], interval: 5s, timeout: 3s, retries: 12 }
+  redis:
+    image: redis:7-alpine
+    healthcheck: { test: ["CMD", "redis-cli", "ping"], interval: 5s, timeout: 3s, retries: 12 }
+  mailpit:
+    image: axllent/mailpit:v1.21
+    ports: ["8025:8025"]
+  backend:
+    build: ./backend
+    depends_on: { postgres: { condition: service_healthy }, redis: { condition: service_healthy } }
+    environment:
+      SPRING_PROFILES_ACTIVE: "${SPRING_PROFILES_ACTIVE:-dev}"
+      DB_URL: jdbc:postgresql://postgres:5432/promora
+      DB_USER: promora
+      DB_PASSWORD: "${DB_PASSWORD:-promora}"
+      JWT_SECRET: "${JWT_SECRET:-}"
+      HASH_SALT: "${HASH_SALT:-}"
+      PUBLIC_URL: "${PUBLIC_URL:-http://localhost:5173}"
+      API_URL: "${API_URL:-http://localhost:5173}"
+      CORS_ORIGINS: "${CORS_ORIGINS:-http://localhost:5173}"
+      FORWARD_HEADERS: framework
+      REDIS_ENABLED: "true"
+      REDIS_HOST: redis
+      MAIL_HOST: mailpit
+      MAIL_PORT: "1025"
+      RAZORPAY_KEY_ID: "${RAZORPAY_KEY_ID:-}"
+      RAZORPAY_KEY_SECRET: "${RAZORPAY_KEY_SECRET:-}"
+      RAZORPAY_WEBHOOK_SECRET: "${RAZORPAY_WEBHOOK_SECRET:-}"
+      AI_BASE_URL: "${AI_BASE_URL:-}"
+      AI_API_KEY: "${AI_API_KEY:-}"
+      AI_MODEL: "${AI_MODEL:-}"
+      ADMIN_EMAIL: "${ADMIN_EMAIL:-}"
+      ADMIN_PASSWORD: "${ADMIN_PASSWORD:-}"
+      STORAGE_DIR: /app/data/uploads
+    volumes: ["uploads:/app/data/uploads"]
+    ports: ["8080:8080"]
+  frontend:
+    build: ./frontend
+    depends_on: [backend]
+    ports: ["5173:80"]
+volumes:
+  pgdata:
+  uploads:
